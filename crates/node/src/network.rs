@@ -50,8 +50,7 @@ impl FraxtalNetworkBuilder {
         let chain_id = ctx.chain_spec().chain().id();
         // Respect --bootnodes when set; otherwise fall back to Fraxtal's built-in list
         // (upstream reth would fall back to Ethereum mainnet bootnodes here).
-        let fraxtal_nodes =
-            args.bootnodes.is_none().then(|| fraxtal_bootnodes(chain_id)).flatten();
+        let fraxtal_nodes = args.bootnodes.is_none().then(|| fraxtal_bootnodes(chain_id)).flatten();
 
         let mut builder = ctx.network_config_builder()?;
         if let Some(nodes) = &fraxtal_nodes {
