@@ -6,9 +6,7 @@ use alloc::sync::Arc;
 use alloy_consensus::{BlockHeader, Header};
 use alloy_evm::{EvmFactory, FromRecoveredTx, FromTxWithEncoded, block::BlockExecutorFactory};
 use alloy_op_evm::{
-    OpTx,
-    block::{OpTxEnv, receipt_builder::OpReceiptBuilder},
-    evm_env_for_op_block, evm_env_for_op_next_block,
+    OpBlockExecutionCtx, OpTx, block::{OpTxEnv, receipt_builder::OpReceiptBuilder}, evm_env_for_op_block, evm_env_for_op_next_block
 };
 use core::fmt::Debug;
 use fraxtal_op_evm::{FraxtalBlockExecutorFactory, FraxtalEvmFactory};
@@ -129,11 +127,11 @@ where
         &self,
         block: &SealedBlock<N::Block>,
         post_exec_mode: Option<PostExecMode>,
-    ) -> alloy_op_evm::OpBlockExecutionCtx
+    ) -> OpBlockExecutionCtx
     where
         N: NodePrimitives<BlockHeader = Header>,
     {
-        alloy_op_evm::OpBlockExecutionCtx {
+        OpBlockExecutionCtx {
             parent_hash: block.header().parent_hash(),
             parent_beacon_block_root: block.header().parent_beacon_block_root(),
             extra_data: block.header().extra_data().clone(),
@@ -147,8 +145,8 @@ where
         parent: &SealedHeader<N::BlockHeader>,
         attributes: OpNextBlockEnvAttributes,
         post_exec_mode: PostExecMode,
-    ) -> alloy_op_evm::OpBlockExecutionCtx {
-        alloy_op_evm::OpBlockExecutionCtx {
+    ) -> OpBlockExecutionCtx {
+        OpBlockExecutionCtx {
             parent_hash: parent.hash(),
             parent_beacon_block_root: attributes.parent_beacon_block_root,
             extra_data: attributes.extra_data,
@@ -184,7 +182,7 @@ where
         > + Debug,
     FraxtalBlockExecutorFactory<R, Arc<ChainSpec>, EvmF>: for<'a> BlockExecutorFactory<
             EvmFactory = EvmF,
-            ExecutionCtx<'a> = alloy_op_evm::OpBlockExecutionCtx,
+            ExecutionCtx<'a> = OpBlockExecutionCtx,
             Transaction = R::Transaction,
             Receipt = R::Receipt,
         >,
@@ -231,7 +229,7 @@ where
     fn context_for_block(
         &self,
         block: &'_ SealedBlock<N::Block>,
-    ) -> Result<alloy_op_evm::OpBlockExecutionCtx, Self::Error> {
+    ) -> Result<OpBlockExecutionCtx, Self::Error> {
         let post_exec_mode = parse_post_exec_payload_from_transactions(
             block.body().transactions(),
             block.header().number(),
@@ -241,7 +239,7 @@ where
         .map(|parsed| PostExecMode::Verify(parsed.payload))
         .unwrap_or_default();
 
-        Ok(alloy_op_evm::OpBlockExecutionCtx {
+        Ok(OpBlockExecutionCtx {
             parent_hash: block.header().parent_hash(),
             parent_beacon_block_root: block.header().parent_beacon_block_root(),
             extra_data: block.header().extra_data().clone(),
@@ -253,8 +251,8 @@ where
         &self,
         parent: &SealedHeader<N::BlockHeader>,
         attributes: Self::NextBlockEnvCtx,
-    ) -> Result<alloy_op_evm::OpBlockExecutionCtx, Self::Error> {
-        Ok(alloy_op_evm::OpBlockExecutionCtx {
+    ) -> Result<OpBlockExecutionCtx, Self::Error> {
+        Ok(OpBlockExecutionCtx {
             parent_hash: parent.hash(),
             parent_beacon_block_root: attributes.parent_beacon_block_root,
             extra_data: attributes.extra_data,
@@ -340,7 +338,7 @@ where
         .map(|parsed| PostExecMode::Verify(parsed.payload))
         .unwrap_or_default();
 
-        Ok(alloy_op_evm::OpBlockExecutionCtx {
+        Ok(OpBlockExecutionCtx {
             parent_hash: payload.parent_hash(),
             parent_beacon_block_root: payload.sidecar.parent_beacon_block_root(),
             extra_data: payload.payload.as_v1().extra_data.clone(),

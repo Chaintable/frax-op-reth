@@ -3,7 +3,7 @@
 
 use clap::Parser;
 use fraxtal_chainspec::FraxtalChainSpecParser;
-use fraxtal_node::proof_history::launch_node_with_proof_history;
+use fraxtal_node::proof_history::launch_node;
 use reth_optimism_cli::Cli;
 use reth_optimism_node::args::RollupArgs;
 use tracing::info;
@@ -25,7 +25,7 @@ fn main() {
     if let Err(err) =
         Cli::<FraxtalChainSpecParser, RollupArgs>::parse().run(async move |builder, rollup_args| {
             info!(target: "reth::cli", "Launching node");
-            launch_node_with_proof_history(builder, rollup_args).await
+            launch_node(builder, rollup_args).await
         })
     {
         eprintln!("Error: {err:?}");
