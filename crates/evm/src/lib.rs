@@ -6,7 +6,9 @@ use alloc::sync::Arc;
 use alloy_consensus::{BlockHeader, Header};
 use alloy_evm::{EvmFactory, FromRecoveredTx, FromTxWithEncoded, block::BlockExecutorFactory};
 use alloy_op_evm::{
-    OpBlockExecutionCtx, OpTx, block::{OpTxEnv, receipt_builder::OpReceiptBuilder}, evm_env_for_op_block, evm_env_for_op_next_block
+    OpBlockExecutionCtx, OpTx,
+    block::{OpTxEnv, receipt_builder::OpReceiptBuilder},
+    evm_env_for_op_block, evm_env_for_op_next_block,
 };
 use core::fmt::Debug;
 use fraxtal_op_evm::{FraxtalBlockExecutorFactory, FraxtalEvmFactory};
@@ -118,6 +120,9 @@ where
     }
 
     /// Returns true when SDM post-exec transactions are consensus-active at `timestamp`.
+    ///
+    /// SDM has no scheduled hardfork activation. It is disabled by default, including after Jovian
+    /// and Karst, and can only be enabled explicitly for integration tests.
     pub const fn is_sdm_active_at_timestamp(&self, _timestamp: u64) -> bool {
         self.sdm_enabled
     }
@@ -127,10 +132,7 @@ where
         &self,
         block: &SealedBlock<N::Block>,
         post_exec_mode: Option<PostExecMode>,
-    ) -> OpBlockExecutionCtx
-    where
-        N: NodePrimitives<BlockHeader = Header>,
-    {
+    ) -> OpBlockExecutionCtx {
         OpBlockExecutionCtx {
             parent_hash: block.header().parent_hash(),
             parent_beacon_block_root: block.header().parent_beacon_block_root(),

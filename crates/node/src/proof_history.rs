@@ -1,7 +1,6 @@
 //! Node launcher with proof history support.
 
 use crate::node::FraxtalNode;
-use reth_optimism_node::args::{ProofsStorageVersion, RollupArgs};
 use eyre::ErrReport;
 use futures_util::FutureExt;
 use reth_db::DatabaseEnv;
@@ -9,6 +8,7 @@ use reth_db_api::database_metrics::DatabaseMetrics;
 use reth_node_builder::{FullNodeComponents, NodeBuilder, WithLaunchContext};
 use reth_optimism_chainspec::OpChainSpec;
 use reth_optimism_exex::OpProofsExEx;
+use reth_optimism_node::args::{ProofsStorageVersion, RollupArgs};
 use reth_optimism_rpc::{
     debug::{DebugApiExt, DebugApiOverrideServer},
     eth::proofs::{EthApiExt, EthApiOverrideServer},
