@@ -1,6 +1,7 @@
 //! Node launcher with proof history support.
 
 use crate::node::FraxtalNode;
+use crate::trace::{OpDebankTraceApiImpl, OpDebankTraceApiServer};
 use eyre::ErrReport;
 use futures_util::FutureExt;
 use reth_db::DatabaseEnv;
@@ -28,7 +29,15 @@ pub async fn launch_node(
     args: RollupArgs,
 ) -> eyre::Result<(), ErrReport> {
     if !args.proofs_history {
-        let handle = builder.node(FraxtalNode::new(args)).launch_with_debug_capabilities().await?;
+        let handle = builder
+            .node(FraxtalNode::new(args))
+            .extend_rpc_modules(|ctx| {
+                let debank_api = OpDebankTraceApiImpl::new(ctx.registry.eth_api().clone());
+                ctx.modules.merge_configured(debank_api.into_rpc())?;
+                Ok(())
+            })
+            .launch_with_debug_capabilities()
+            .await?;
         return handle.node_exit_future.await;
     }
 
@@ -103,6 +112,11 @@ where
             let eth_replaced = ctx.modules.replace_configured(api_ext.into_rpc())?;
             let debug_replaced = ctx.modules.replace_configured(debug_ext.into_rpc())?;
             info!(target: "reth::cli", eth_replaced, debug_replaced, "Proofs-history RPC overrides installed");
+            Ok(())
+        })
+        .extend_rpc_modules(|ctx| {
+            let debank_api = OpDebankTraceApiImpl::new(ctx.registry.eth_api().clone());
+            ctx.modules.merge_configured(debank_api.into_rpc())?;
             Ok(())
         })
         .launch_with_debug_capabilities()
