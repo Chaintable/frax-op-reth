@@ -36,6 +36,9 @@ RUN cargo chef cook --profile $BUILD_PROFILE --features "$FEATURES" --recipe-pat
 COPY --exclude=dist . .
 RUN cargo build --profile $BUILD_PROFILE --features "$FEATURES" --locked --bin fraxtal-op-reth
 
+# Verify the emitted Debank call trees before publishing either architecture.
+RUN cargo test --profile $BUILD_PROFILE --features "$FEATURES" --locked -p fraxtal-node --lib debank::tests
+
 # ARG is not resolved in COPY so we have to hack around it by copying the
 # binary to a temporary location
 RUN cp /app/target/$BUILD_PROFILE/fraxtal-op-reth /app/fraxtal-op-reth
@@ -53,6 +56,8 @@ WORKDIR /app
 
 # Copy fraxtal-op-reth over from the build stage
 COPY --from=builder /app/fraxtal-op-reth /usr/local/bin
+
+RUN fraxtal-op-reth --version
 
 # Copy licenses
 COPY LICENSE-* ./
